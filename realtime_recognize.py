@@ -62,7 +62,7 @@ class recoder:
             
             # 将读入的数据转换为数组
             audio_data = np.fromstring(string_audio_data, dtype=np.short)
-            wav_data = np.fromstring(string_audio_data, dtype=np.float32)
+            wav_data = np.fromstring(string_audio_data, dtype=np.int16)
 
             # for each in wav_data:
             #     print(each)
@@ -82,18 +82,22 @@ class recoder:
             # 将要保存的数据存放到save_buffer中
                 #print  save_count > 0 and time_count >0
                 save_buffer.append(string_audio_data)
-                wav_buffer.extend(wav_data)
+                # wav_buffer.extend(wav_data)
 
                 self.Voice_String = string_audio_data
                 # wav_name = "test/%d.wav" % wav_count
-                wav_name = "test/tmp.wav"
-                self.savewav(wav_name)
-                wav_count = wav_count + 1
-                wav, _ = librosa.load(wav_name, mono=True, sr=16000)
+                # wav_name = "test/tmp.wav"
+                # self.savewav(wav_name)
+                # wav_count = wav_count + 1
+                wav_numpy = np.hstack(wav_data)
+                wav_numpy = wav_numpy / (2.0 ** 15)
+
+                # wav, _ = librosa.load(wav_name, mono=True, sr=16000)
+                wav = wav_numpy
                 global prev_mfcc
                 global flag
                 global mfcc
-                if(flag == False):
+                if(flag is False):
                     prev_mfcc = librosa.feature.mfcc(wav, 16000)
                     mfcc = np.transpose(np.expand_dims(prev_mfcc, axis=0), [0, 2, 1])
                     flag = True
@@ -114,11 +118,14 @@ class recoder:
                         if(math.isnan(num)):
                             wav_buffer[i] = 0
                     # print(len(wav_buffer))
-                    wav_numpy = np.hstack(wav_buffer)
-                    np.set_printoptions(threshold='nan') 
+                    # wav_numpy = np.hstack(wav_buffer)
+                    # np.set_printoptions(threshold='nan') 
                    
                     save_buffer = [] 
                     wav_buffer = []
+                    # global mfcc
+                    # global flag
+                    # flag = False
                     print("Recode a piece of voice successfully!")
                     # self.savewav("test/test.wav")
                     return True
@@ -127,9 +134,10 @@ class recoder:
                     self.Voice_String = save_buffer
                     save_buffer = [] 
                     wav_buffer = []
-                    wav_name = "test/%d.wav" % wav_count
-                    self.savewav(wav_name)
-                    wav_count = wav_count + 1
+                    # wav_name = "test/%d.wav" % wav_count
+                    # self.savewav(wav_name)
+                    # wav_count = wav_count + 1
+                    flag = False
                     print("Recode a piece of  voice successfully!")
                     # self.savewav("test/test.wav")
                     return True
@@ -198,7 +206,7 @@ with tf.Session() as sess:
         r.recoder()
         global mfcc
         label = sess.run(y, feed_dict={x: mfcc})
-        print(" ")
+        # print(" ")
         data.print_index(label)
     # t2 = time.time()
 
